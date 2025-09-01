@@ -1,14 +1,19 @@
+#The following code queries yfinance for the last time, this time looking ahead for 5 years from the Jan/Feb 2018 period in which the Kaggle fundamentals were recorded
+#This is to simulate actual investment and avoid survivior bias
+
+
+#Extracts data saved in Step2
 csv_path = r"D:\AnonUser\Documents\UniStocks\AdjustedStocksList.csv"
 df = pd.read_csv(csv_path)
 
-# Ensure distinct tickers
+# Ensure distinct tickers (even though this has already been done it's always a precaution)
 tickers = df['Symbol'].dropna().unique().tolist()
 
 # Storage
 results = []
 nulls_2019, nulls_2020, nulls_2021, nulls_2022, nulls_2023 = [], [], [], [], []
 
-# Define year windows: for standard investment approaches stocks are reviewed periodically. 
+# Define year windows: for standard investment approaches stocks are reviewed periodically, so for five years they are reviewed each year
 year_windows = {
     2019: ("2019-01-01", "2019-02-28"),
     2020: ("2020-01-01", "2020-02-28"),
@@ -17,7 +22,7 @@ year_windows = {
     2023: ("2023-01-01", "2023-02-28"),
 }
 
-# === b) Loop tickers ===
+#  Loop tickers to obtain price history for each
 for ticker in tickers:
     print(f"Processing {ticker}...")
     ticker_result = {"Symbol": ticker, "Year1": 0, "Year2": 0, "Year3": 0, "Year4": 0, "Year5": 0}
@@ -34,7 +39,7 @@ for ticker in tickers:
             nulls_2019.append(ticker)
             nulls_2021.append(ticker)
             nulls_2023.append(ticker)
-            
+            #old nulls detection code
             
         else:
 
@@ -43,7 +48,7 @@ for ticker in tickers:
                 window_data = hist.loc[mask]
 
                 if not window_data.empty:
-                    avg_price = float(window_data['Close'].mean())
+                    avg_price = float(window_data['Close'].mean()) #detects the data for Jan/Feb of the given year and averages
                 else:
                     avg_price = 0.0
 
@@ -76,14 +81,11 @@ for ticker in tickers:
 
     results.append(ticker_result)
 
-# === c) Merge results back with original CSV ===
+# Merge results back with original CSV
 results_df = pd.DataFrame(results)
 final_df = df.merge(results_df, on="Symbol", how="left")
 
 # Save results
 final_df.to_csv(r"D:\AnonUser\Documents\UniStocks\Ticker_Averages.csv", index=False)
 
-# === d) Null lists ===
-print("2019 Nulls:", nulls_2019)
-print("2021 Nulls:", nulls_2021)
-print("2023 Nulls:", nulls_2023)
+
