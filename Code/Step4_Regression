@@ -12,15 +12,6 @@ import pandas as pd
 import seaborn as sns
 import matplotlib.pyplot as plt
 
-RF_rate = {
-    2018: 2.7,
-    2019: 2.7,
-    2020: 1.7,
-    2021: 1.2,
-    2022: 1.9,
-    2023: 3.6
-}
-
 df = pd.read_csv(r"C:\Users\AnonUser\Desktop\University_Python\Ticker_Averages.csv")
 print(df.head())
 filtered_df = df[(df['DropYN'] != 1) & (df['Price/Book'] > 0) & (df['Price/Earnings'] > 0)]
