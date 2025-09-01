@@ -1,0 +1,102 @@
+import pandas as pd
+from datetime import datetime 
+
+
+def common_elements(list1, list2):
+    outlist=[]
+    for x in list1:
+        for y in list2:
+            
+            
+            date_format = "%Y-%m-%d"
+
+            a = datetime.strptime(x, date_format)
+            b = datetime.strptime(y, date_format)
+            dif = a-b
+            if dif.days < 14 and dif.days > -14:
+                if x not in outlist:
+                    outlist.append(x)
+                if y not in outlist:
+                    outlist.append(y)
+    return outlist
+
+# Load tickers from the Symbol column of the Kaggle Dataset
+df = pd.read_csv(r"D:\AnonUser\Documents\financials.csv")
+print(df.head())
+
+df1 = df[df.isna().any(axis=1)]
+
+print(df1.columns)
+
+print(df1.values.tolist())
+
+print(df1['Price/Book'])
+print(df1['Price/Earnings'])
+
+#Drop any columns with nulls
+df_adj = df.dropna()
+
+print(df_adj)
+
+
+#Test for unique Ticker/Symbol - is it a Primary Key?
+uniquetest = df['Symbol'].is_unique
+print(uniquetest)
+
+
+
+#Read the 
+df2 = pd.read_csv(r"C:\Users\AnonUser\Documents\SP500_2018.csv")
+datelist = []
+olddatelist = []
+breakerlist =[]
+started = False
+
+for index, row in df_adj.iterrows():
+
+    x=row['Symbol']
+    y=row['Price']
+    print(x)
+    
+
+    filtered_df = df2[df2['Ticker'] == x]
+    print(filtered_df.head())
+    
+    if len(filtered_df) > 0:
+    
+        datelist = []
+        for index2, row2 in filtered_df.iterrows():
+            
+            if row2['High'] >= y*0.98 and row2['Low'] <= y*1.02:
+                 datelist.append(row2['Date'])
+        if len(datelist) > 0:
+            if started == False:
+                started = True
+                olddatelist=datelist
+                initialdatelist = olddatelist
+               
+            else:
+                refreshdatelist = common_elements(olddatelist,datelist)
+                if len(refreshdatelist) == 0 and len(olddatelist) > 0:
+         
+                    breakerlist.append(x)
+                else:
+                    
+                    olddatelist = refreshdatelist
+            
+            print(olddatelist)
+        
+print(initialdatelist)       
+print(olddatelist)
+print(breakerlist)    
+
+
+df_adj_valid = df_adj[~df_adj['Symbol'].isin(breakerlist)]
+
+print(df_adj_valid)
+df_adj_valid=df_adj_valid.rename(columns={"52 Week Low":"52_Week_High", "52 Week High":"52_Week_Low", "Dividend Yield":"Dividend_Yield"})
+
+df_adj_valid = df_adj_valid.drop('SEC Filings', axis=1)
+
+
+df_adj_valid.to_csv(r"D:\AnonUser\Documents\UniStocks\AdjustedStocksList.csv",index=False)
