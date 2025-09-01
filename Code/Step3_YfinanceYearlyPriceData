@@ -1,7 +1,6 @@
 #The following code queries yfinance for the last time, this time looking ahead for 5 years from the Jan/Feb 2018 period in which the Kaggle fundamentals were recorded
 #This is to simulate actual investment and avoid survivior bias
 
-
 #Extracts data saved in Step2
 csv_path = r"D:\AnonUser\Documents\UniStocks\AdjustedStocksList.csv"
 df = pd.read_csv(csv_path)
@@ -21,14 +20,12 @@ year_windows = {
     2022: ("2022-01-01", "2022-02-28"),
     2023: ("2023-01-01", "2023-02-28"),
 }
-
 #  Loop tickers to obtain price history for each
 for ticker in tickers:
     print(f"Processing {ticker}...")
     ticker_result = {"Symbol": ticker, "Year1": 0, "Year2": 0, "Year3": 0, "Year4": 0, "Year5": 0}
 
     try:
-        # Use history() instead of download()
         stock = yf.Ticker(ticker)
         hist = stock.history(period="max", auto_adjust=False)
         time.sleep(0.25)
@@ -36,13 +33,8 @@ for ticker in tickers:
         if hist.empty:
             # No history at all -> mark all as missing
             print('No History')
-            nulls_2019.append(ticker)
-            nulls_2021.append(ticker)
-            nulls_2023.append(ticker)
-            #old nulls detection code
-            
+           
         else:
-
             for year, (start, end) in year_windows.items():
                 mask = (hist.index >= start) & (hist.index <= end)
                 window_data = hist.loc[mask]
@@ -68,7 +60,6 @@ for ticker in tickers:
                     ticker_result["Year5"] = avg_price
                     if avg_price == 0.0: nulls_2023.append(ticker)
         
-
     except Exception as e:
         print(f"Error fetching {ticker}: {e}")
         nulls_2019.append(ticker)
