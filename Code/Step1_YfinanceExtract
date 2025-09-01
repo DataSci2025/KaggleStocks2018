@@ -6,8 +6,6 @@ import time
 df = pd.read_csv(r"D:\AnonUser\Documents\financials.csv")
 tickers = df['Symbol'].dropna().tolist()
 
-
-
 # Batches were attempted because of yfinance scraping timeout; by adding a sleep of 0.25 these were rendered unnecessary, however.
 BATCH_SIZE = 1
 start_date = "2017-01-01"
@@ -22,8 +20,6 @@ for i in range(0, len(tickers), BATCH_SIZE):
     try:
         data = yf.download(batch, start=start_date, end=end_date, progress=False, auto_adjust=True)
         time.sleep(0.25)
-
-
 
         for ticker in batch:
             # Extracts individual Stock Symbol DataFrame
@@ -58,9 +54,6 @@ for i in range(0, len(tickers), BATCH_SIZE):
 # Combine all tickers into one DataFrame
 final_df = all_data
 final_df.reset_index(inplace=True)  # make Date a column
-
-
-print(final_df.head())
 
 # Save to CSV
 final_df.to_csv(r"C:/Users/AnonUser/Documents/SP500_2018_AA.csv", index=False)
