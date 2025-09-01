@@ -5,11 +5,8 @@ from datetime import datetime
 def common_elements(list1, list2):
     outlist=[]
     for x in list1:
-        for y in list2:
-            
-            
+        for y in list2:            
             date_format = "%Y-%m-%d"
-
             a = datetime.strptime(x, date_format)
             b = datetime.strptime(y, date_format)
             dif = a-b
@@ -26,24 +23,13 @@ print(df.head())
 
 df1 = df[df.isna().any(axis=1)]
 
-print(df1.columns)
-
-print(df1.values.tolist())
-
-print(df1['Price/Book'])
-print(df1['Price/Earnings'])
 
 #Drop any columns with nulls to ensure data integrity
 df_adj = df.dropna()
 
-print(df_adj)
-
-
 #Test for unique Ticker/Symbol - is it a Primary Key?
 uniquetest = df['Symbol'].is_unique
 print(uniquetest)
-
-
 
 #Read the yfinance data from Step 1
 df2 = pd.read_csv(r"C:\Users\AnonUser\Documents\SP500_2018.csv")
@@ -51,7 +37,6 @@ datelist = []
 olddatelist = []
 breakerlist =[]
 started = False
-
 
 #The below code does the following:
 # If yfinance data is blank, skip
