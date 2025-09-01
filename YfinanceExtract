@@ -1,0 +1,68 @@
+import yfinance as yf
+import pandas as pd
+import time
+
+# Load tickers from pre-downloaded Kaggle dataset
+df = pd.read_csv(r"D:\AnonUser\Documents\financials.csv")
+tickers = df['Symbol'].dropna().tolist()
+
+
+
+# Batches were attempted because of yfinance scraping timeout; by adding a sleep of 0.25 these were rendered unnecessary, however.
+BATCH_SIZE = 1
+start_date = "2017-01-01"
+end_date = "2023-01-01"
+col_names = ['Adj Close', 'Close', 'High', 'Low', 'Open', 'Volume', 'Ticker']
+all_data = pd.DataFrame(columns = col_names)
+
+for i in range(0, len(tickers), BATCH_SIZE):
+    batch = tickers[i:i+BATCH_SIZE]
+    print(f"Processing batch: {batch}")
+
+    try:
+        data = yf.download(batch, start=start_date, end=end_date, progress=False, auto_adjust=True)
+        time.sleep(0.25)
+
+
+
+        for ticker in batch:
+            # Extracts individual Stock Symbol DataFrame
+            if len(batch) > 1:
+                if ticker not in data.columns.get_level_values(1):
+                    print(f"No data for {ticker}. Skipping.")
+                    continue
+                ticker_data = data.xs(ticker, axis=1, level=1)
+            else:
+                ticker_data = data
+
+            if not ticker_data.empty:
+
+                ticker_data.columns = ticker_data.columns.droplevel(1)
+
+                ticker_data = ticker_data.copy()
+                ticker_data['Ticker'] = ticker  # Symbol/Ticker column must be added as we are pulling one at a time
+                print(ticker_data.columns.to_numpy().tolist())
+                if len(all_data) == 0:
+                    
+                    all_data = ticker_data
+                else:
+                    print(all_data)
+                    print(ticker_data)
+                    all_data=pd.concat([all_data,ticker_data])
+                
+                
+
+    except Exception as e:
+        print(f"Batch error for {batch}: {e}")
+
+# Combine all tickers into one DataFrame
+final_df = all_data
+final_df.reset_index(inplace=True)  # make Date a column
+
+
+print(final_df.head())
+
+# Save to CSV
+final_df.to_csv(r"C:/Users/AnonUser/Documents/SP500_2018_AA.csv", index=False)
+print(f"Saved {len(final_df)} rows for {len(all_data)} tickers.")
+
