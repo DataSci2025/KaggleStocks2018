@@ -1,0 +1,288 @@
+from sklearn.linear_model import LinearRegression
+from sklearn.model_selection import train_test_split
+from itertools import combinations
+from scipy.stats import kruskal, mannwhitneyu
+from scipy.stats import shapiro
+from statsmodels.stats.power import FTestPower
+
+
+import numpy as np
+
+import pandas as pd
+import seaborn as sns
+import matplotlib.pyplot as plt
+
+RF_rate = {
+    2018: 2.7,
+    2019: 2.7,
+    2020: 1.7,
+    2021: 1.2,
+    2022: 1.9,
+    2023: 3.6
+}
+
+df = pd.read_csv(r"C:\Users\AnonUser\Desktop\University_Python\Ticker_Averages.csv")
+print(df.head())
+filtered_df = df[(df['DropYN'] != 1) & (df['Price/Book'] > 0) & (df['Price/Earnings'] > 0)]
+filtered_df = filtered_df[filtered_df['Price/Book'] <= 100]
+print(filtered_df.head())
+print(f"Filtered row count: {len(filtered_df)}")
+for i in range(1, 6):
+    year_col = f'Year{i}'
+    new_col = f'Year{i}_GL'
+    # Adjust year_col by adding Price * (Dividend_Yield/100) if Dividend_Yield is not 0; this assumes the dividend remains constant across the five years.
+    adjusted_year = filtered_df[year_col].copy()
+    mask = filtered_df['Dividend_Yield'] != 0
+    adjusted_year[mask] = adjusted_year[mask] + (filtered_df['Price'][mask] * (filtered_df['Dividend_Yield'][mask]/100))
+    filtered_df[new_col] = ((adjusted_year - filtered_df['Price']) / filtered_df['Price'] * 100).round(1)
+    # Windsorise: remove top and bottom 1% of GL for each year, to reduce the impact of extreme outliers
+    lower = filtered_df[new_col].quantile(0.01)
+    upper = filtered_df[new_col].quantile(0.99)
+    filtered_df = filtered_df[(filtered_df[new_col] >= lower) & (filtered_df[new_col] <= upper)]
+    rf_year = 2017 + i
+    rf_col = f'RF_{rf_year}'
+    filtered_df[rf_col] = RF_rate.get(rf_year, None)
+print(filtered_df[[f'Year{i}_GL' for i in range(1, 6)]].head())
+
+# Calculate 52_Week_Trend
+filtered_df['52_Week_Trend'] = (
+    (filtered_df['Price'] - filtered_df['52_Week_Low']) /
+    (filtered_df['52_Week_High'] - filtered_df['52_Week_Low'])
+)
+
+# Drop specified columns for pairplot; the Year columns have been replaced by GL columns; the 52_Week columns have also been merged into a single column. The others are irrelevant
+cols_to_drop = [
+    'Symbol', 'Name', 'Sector', 'DropYN', 'Reason',
+    'Year1', 'Year2', 'Year3', 'Year4', 'Year5',
+     '52_Week_High', '52_Week_Low'
+]
+pairplot_df = filtered_df.drop(columns=cols_to_drop, errors='ignore')
+
+# 1. Heatmap of pairplot_df
+import numpy as np
+import matplotlib.pyplot as plt
+import seaborn as sns
+plt.figure(figsize=(10,8))
+sns.heatmap(pairplot_df.corr(), annot=True, cmap='coolwarm', fmt='.2f')
+plt.title('Correlation Heatmap')
+# plt.show()
+
+# 2. Split datasets by Price/Earnings and Price/Book medians
+
+# Split into thirds for Price/Earnings
+pe_33 = pairplot_df['Price/Earnings'].quantile([1/3, 2/3]).values
+pe_bottom = pairplot_df[pairplot_df['Price/Earnings'] <= pe_33[0]]
+pe_middle = pairplot_df[(pairplot_df['Price/Earnings'] > pe_33[0]) & (pairplot_df['Price/Earnings'] <= pe_33[1])]
+pe_top = pairplot_df[pairplot_df['Price/Earnings'] > pe_33[1]]
+
+# Split into thirds for Price/Book
+pb_33 = pairplot_df['Price/Book'].quantile([1/3, 2/3]).values
+pb_bottom = pairplot_df[pairplot_df['Price/Book'] <= pb_33[0]]
+pb_middle = pairplot_df[(pairplot_df['Price/Book'] > pb_33[0]) & (pairplot_df['Price/Book'] <= pb_33[1])]
+pb_top = pairplot_df[pairplot_df['Price/Book'] > pb_33[1]]
+
+
+#Statistical Tests to detect normmality: 
+
+for split_name, split_df in zip(
+    ['pe_bottom', 'pe_middle', 'pe_top', 'pb_bottom', 'pb_middle', 'pb_top'],
+    [pe_bottom, pe_middle, pe_top, pb_bottom, pb_middle, pb_top]
+):
+    print(f"\nNormality tests for {split_name}:")
+    for year in range(1, 6):
+        gl_col = f'Year{year}_GL'
+        data = split_df[gl_col].dropna()
+        if len(data) < 3:
+            print(f"{gl_col}: Not enough data for test.")
+            continue
+        stat, p = shapiro(data)
+        print(f"{gl_col}: Shapiro-Wilk p-value = {p:.4f} {'(normal)' if p > 0.05 else '(not normal)'}")
+
+
+#Statistical Tests to determine relationships between datasets. The above normality test had mixed resuklts, and consequenly the Kruskal-Wallis ranked test was used
+for year in range(1, 6):
+
+    gl_col = f'Year{year}_GL'
+    print(f"\nYear {year} GL - Price/Earnings split")
+    groups_pe = [pe_bottom[gl_col].dropna(), pe_middle[gl_col].dropna(), pe_top[gl_col].dropna()]
+    stat_pe, p_pe = kruskal(*groups_pe)
+    print(f"Kruskal-Wallis p-value: {p_pe:.4f}")
+    print("Average GLs (PE):", [g.mean() if len(g) > 0 else float('nan') for g in groups_pe])
+    print("Pairwise Mann-Whitney U p-values (PE):")
+    print("Bottom vs Middle:", mannwhitneyu(groups_pe[0], groups_pe[1]).pvalue)
+    print("Bottom vs Top:", mannwhitneyu(groups_pe[0], groups_pe[2]).pvalue)
+    print("Middle vs Top:", mannwhitneyu(groups_pe[1], groups_pe[2]).pvalue)
+
+    print(f"\nYear {year} GL - Price/Book split")
+    groups_pb = [pb_bottom[gl_col].dropna(), pb_middle[gl_col].dropna(), pb_top[gl_col].dropna()]
+    stat_pb, p_pb = kruskal(*groups_pb)
+    print(f"Kruskal-Wallis p-value: {p_pb:.4f}")
+    print("Average GLs (PB):", [g.mean() if len(g) > 0 else float('nan') for g in groups_pb])
+    print("Pairwise Mann-Whitney U p-values (PB):")
+    print("Bottom vs Middle:", mannwhitneyu(groups_pb[0], groups_pb[1]).pvalue)
+    print("Bottom vs Top:", mannwhitneyu(groups_pb[0], groups_pb[2]).pvalue)
+    print("Middle vs Top:", mannwhitneyu(groups_pb[1], groups_pb[2]).pvalue)
+
+
+
+splits = {
+    'pe_bottom': pe_bottom,
+    'pe_middle': pe_middle,
+    'pe_top': pe_top,
+    'pb_bottom': pb_bottom,
+    'pb_middle': pb_middle,
+    'pb_top': pb_top
+}
+target_cols = [f'Year{i}_GL' for i in range(1, 6)]
+#regressors = ['Price/Book', 'Price/Sales', 'Price/Earnings', 'Market Cap', 'Price', '52_Week_Trend']
+
+
+#Predictors as determined by exploratory analysis and manual stepwise regression: initially the above regressors were used and then removed/reappended in order to obtain p-values under 0.05 where possible
+
+predictors_dict = {
+    'pe_bottom': {
+        'Year1_GL': ['52_Week_Trend'],
+        'Year2_GL': ['Price/Sales'],
+        'Year3_GL': ['Price/Earnings'],
+        'Year4_GL': ['Price/Earnings'],
+        'Year5_GL': ['Price/Earnings'],
+    },
+    'pe_middle': {
+        'Year1_GL': ['Price/Sales'],
+        'Year2_GL': ['Price/Sales'],
+        'Year3_GL': ['Price/Sales'],
+        'Year4_GL': ['Price/Sales'],
+        'Year5_GL': ['Price/Book']
+    },
+    'pe_top': {
+        'Year1_GL': ['52_Week_Trend'],
+        'Year2_GL': ['Price/Sales'],
+        'Year3_GL': ['Price/Sales'],
+        'Year4_GL': ['Price/Sales'],
+        'Year5_GL': ['Price/Sales'],
+    },
+    'pb_bottom': {
+        'Year1_GL': ['Price/Sales','52_Week_Trend'],
+        'Year2_GL': ['Price/Book', 'Price/Sales', 'Price/Earnings'],
+        'Year3_GL': ['Price/Sales'],
+        'Year4_GL': ['Price/Sales'],
+        'Year5_GL': ['Price/Book'],
+    },
+    'pb_middle': {
+        'Year1_GL': ['Price/Sales'],
+        'Year2_GL': ['Price/Sales'],
+        'Year3_GL': ['Price/Sales'],
+        'Year4_GL': ['Price/Sales'],
+        'Year5_GL': ['Price/Sales'],
+    },
+    'pb_top': {
+        'Year1_GL': ['Price/Sales'],
+        'Year2_GL': ['Price/Sales'],
+        'Year3_GL': ['Price/Sales', '52_Week_Trend'],
+        'Year4_GL': ['Price/Sales'],
+        'Year5_GL': ['Price/Book'],
+    },
+    'combined': {
+        'Year1_GL': ['Price/Sales', '52_Week_Trend'],
+        'Year2_GL': ['Price/Book', 'Price/Sales'],
+        'Year3_GL': ['Price/Book', 'Price/Sales', '52_Week_Trend'],
+        'Year4_GL': ['Price/Book', 'Price/Sales'],
+        'Year5_GL': ['Price/Book'],
+    }
+}
+
+def run_linear_regressions(df, split_name):
+    import matplotlib.pyplot as plt
+    import statsmodels.api as sm
+    from sklearn.model_selection import train_test_split
+    global all_regression_results
+    if 'all_regression_results' not in globals():
+        all_regression_results = []
+    results = []
+    split_names_map = {
+        'pe_bottom': 'P/E Bottom Third',
+        'pe_middle': 'P/E Middle Third',
+        'pe_top': 'P/E Top Third',
+        'pb_bottom': 'P/B Bottom Third',
+        'pb_middle': 'P/B Middle Third',
+        'pb_top': 'P/B Top Third',
+        'combined': 'Combined'
+    }
+    for target in target_cols:
+        predictors = predictors_dict.get(split_name, {}).get(target, None)
+        if predictors is None or not all(col in df.columns for col in predictors):
+            continue
+        X = df[predictors].dropna()
+        y = df[target].loc[X.index]
+        if len(X) < 10:
+            continue
+        # Shuffle before splitting into train and test
+        shuffled = X.copy()
+        shuffled['__y__'] = y.values
+        shuffled = shuffled.sample(frac=1, random_state=42).reset_index(drop=True)
+        y = shuffled['__y__']
+        X = shuffled.drop(columns='__y__')
+        X_train, X_test, y_train, y_test = train_test_split(X, y, train_size=0.8, random_state=42)
+        X_train_const = sm.add_constant(X_train)
+        model_train = sm.OLS(y_train, X_train_const).fit()
+        # Obtain and Append regression results for this predictor
+        r2_train = model_train.rsquared
+        adj_r2_train = model_train.rsquared_adj
+        X_test_const = sm.add_constant(X_test)
+        y_pred = model_train.predict(X_test_const)
+        ss_res = ((y_test - y_pred) ** 2).sum()
+        ss_tot = ((y_test - y_test.mean()) ** 2).sum()
+        r2_test = 1 - ss_res / ss_tot if ss_tot != 0 else float('nan')
+        n_test = len(y_test)
+        p_test = X_test.shape[1]
+        adj_r2_test = 1 - (1 - r2_test) * (n_test - 1) / (n_test - p_test - 1) if n_test > p_test + 1 else float('nan')
+        mape = (np.abs((y_test - y_pred) / y_test)).mean() * 100 if np.all(y_test != 0) else float('nan')
+        eq_terms = [f"{model_train.params[pred]:.2f}*{pred}" for pred in predictors]
+        eq_str = f"{model_train.params['const']:.2f} + " + " + ".join(eq_terms)
+        eq_str = "'" + eq_str
+        pval_str = ", ".join([f"{pred}: {model_train.pvalues[pred]:.3g}" for pred in ['const'] + predictors])
+
+        all_regression_results.append({
+            'Split': split_names_map.get(split_name, split_name),
+            'Year': target.replace('_GL','').replace('Year',''),
+            'Predictors': ", ".join(predictors),
+            'Train R²': round(r2_train, 3),
+            'Train Adj R²': round(adj_r2_train, 3),
+            'Test Adj R²': round(adj_r2_test, 3),
+            
+            'MAPE': round(mape, 2),
+            'Equation': eq_str,
+            'P_values': pval_str
+        })
+        # # Plot regression line and scatter
+        # first_pred = predictors[0]
+        # plt.figure(figsize=(7,5))
+        # plt.scatter(X_train[first_pred], y_train, color='blue', alpha=0.5, label='Train')
+        # # Regression line
+        # x_vals = np.linspace(X_train[first_pred].min(), X_train[first_pred].max(), 100)
+        # y_vals = model_train.params['const'] + model_train.params[first_pred] * x_vals
+        # plt.plot(x_vals, y_vals, color='red', label='Regression Line')
+        # plt.xlabel(first_pred)
+        # plt.ylabel(target)
+        # plt.title(f"{split_names_map.get(split_name, split_name)} {target} vs {first_pred}")
+        # plt.legend()
+        # plt.tight_layout()
+        # plt.show()
+        
+        # # Finally for a tabular view, the results are appended to a global list
+        # if results:
+        #     all_regression_results.extend(results)
+
+# Run for each split
+for split_name, split_df in splits.items():
+    run_linear_regressions(split_df, split_name)
+run_linear_regressions(pairplot_df, 'combined')
+
+# Export all results to CSV
+import pandas as pd
+df_all_results = pd.DataFrame(all_regression_results)
+csv_path = r"C:\Users\AnonUser\Desktop\University_Python\regression_results.csv"
+df_all_results.to_csv(csv_path, index=False)
+
+
+print(f"\nAll regression results exported to {csv_path}")
