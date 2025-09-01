@@ -76,9 +76,7 @@ for index, row in df_adj.iterrows():
          
                     breakerlist.append(x)
                 else:
-                    
                     olddatelist = refreshdatelist
-            
             print(olddatelist)
         
 print(initialdatelist)       
@@ -91,8 +89,6 @@ print(breakerlist)
 
 df_adj_valid = df_adj[~df_adj['Symbol'].isin(breakerlist)]
 
-print(df_adj_valid)
-
 #Renames columns - in particular, the 52_Week_Low and 52_Week_High were the wrong way around
 df_adj_valid=df_adj_valid.rename(columns={"52 Week Low":"52_Week_High", "52 Week High":"52_Week_Low", "Dividend Yield":"Dividend_Yield"})
 
@@ -101,9 +97,6 @@ df_adj_valid = df_adj_valid.drop('SEC Filings', axis=1)
 
 #Saves with stocks with any field null dropped, and stocks where yfinance prices are incompatable with the detected Jan/Feb 2018 timescale dropped
 df_adj_valid.to_csv(r"D:\AnonUser\Documents\UniStocks\AdjustedStocksList.csv",index=False)
-
-
-
 
 #Dates output = ['2018-02-16', '2018-02-06', '2018-02-07', '2018-02-08', '2018-02-09', '2018-02-12', '2018-02-14', '2018-02-05', '2018-02-13', '2018-02-15', '2018-02-20', '2018-02-21', '2018-02-22', '2018-02-23', '2018-02-26', '2018-01-29', '2018-01-16', '2018-01-03', '2018-01-04', '2018-01-05', '2017-12-21', '2017-12-22', '2017-12-26', '2017-12-27', '2017-12-28', '2017-12-29', '2018-01-02', '2018-01-08', '2018-01-09', '2018-01-30', '2018-01-31', '2018-02-01', '2018-02-02']
 #This indicates a likely January/February 2018 date
