@@ -1,0 +1,89 @@
+csv_path = r"D:\AnonUser\Documents\UniStocks\AdjustedStocksList.csv"
+df = pd.read_csv(csv_path)
+
+# Ensure distinct tickers
+tickers = df['Symbol'].dropna().unique().tolist()
+
+# Storage
+results = []
+nulls_2019, nulls_2020, nulls_2021, nulls_2022, nulls_2023 = [], [], [], [], []
+
+# Define year windows: for standard investment approaches stocks are reviewed periodically. 
+year_windows = {
+    2019: ("2019-01-01", "2019-02-28"),
+    2020: ("2020-01-01", "2020-02-28"),
+    2021: ("2021-01-01", "2021-02-28"),
+    2022: ("2022-01-01", "2022-02-28"),
+    2023: ("2023-01-01", "2023-02-28"),
+}
+
+# === b) Loop tickers ===
+for ticker in tickers:
+    print(f"Processing {ticker}...")
+    ticker_result = {"Symbol": ticker, "Year1": 0, "Year2": 0, "Year3": 0, "Year4": 0, "Year5": 0}
+
+    try:
+        # Use history() instead of download()
+        stock = yf.Ticker(ticker)
+        hist = stock.history(period="max", auto_adjust=False)
+        time.sleep(0.25)
+
+        if hist.empty:
+            # No history at all -> mark all as missing
+            print('No History')
+            nulls_2019.append(ticker)
+            nulls_2021.append(ticker)
+            nulls_2023.append(ticker)
+            
+            
+        else:
+
+            for year, (start, end) in year_windows.items():
+                mask = (hist.index >= start) & (hist.index <= end)
+                window_data = hist.loc[mask]
+
+                if not window_data.empty:
+                    avg_price = float(window_data['Close'].mean())
+                else:
+                    avg_price = 0.0
+
+                if year == 2019:
+                    ticker_result["Year1"] = avg_price
+                    if avg_price == 0.0: nulls_2019.append(ticker)
+                elif year == 2020:
+                        ticker_result["Year2"] = avg_price
+                        if avg_price == 0.0: nulls_2020.append(ticker)
+                elif year == 2021:
+                    ticker_result["Year3"] = avg_price
+                    if avg_price == 0.0: nulls_2021.append(ticker)
+                elif year == 2022:
+                        ticker_result["Year4"] = avg_price
+                        if avg_price == 0.0: nulls_2020.append(ticker)
+                elif year == 2023:
+                    ticker_result["Year5"] = avg_price
+                    if avg_price == 0.0: nulls_2023.append(ticker)
+        
+
+    except Exception as e:
+        print(f"Error fetching {ticker}: {e}")
+        nulls_2019.append(ticker)
+        nulls_2020.append(ticker)
+        nulls_2021.append(ticker)
+        nulls_2022.append(ticker)
+        nulls_2023.append(ticker)
+    
+    print(ticker_result)
+
+    results.append(ticker_result)
+
+# === c) Merge results back with original CSV ===
+results_df = pd.DataFrame(results)
+final_df = df.merge(results_df, on="Symbol", how="left")
+
+# Save results
+final_df.to_csv(r"D:\AnonUser\Documents\UniStocks\Ticker_Averages.csv", index=False)
+
+# === d) Null lists ===
+print("2019 Nulls:", nulls_2019)
+print("2021 Nulls:", nulls_2021)
+print("2023 Nulls:", nulls_2023)
