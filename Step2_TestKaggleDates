@@ -45,12 +45,22 @@ print(uniquetest)
 
 
 
-#Read the 
+#Read the yfinance data from Step 1
 df2 = pd.read_csv(r"C:\Users\AnonUser\Documents\SP500_2018.csv")
 datelist = []
 olddatelist = []
 breakerlist =[]
 started = False
+
+
+#The below code does the following:
+# If yfinance data is blank, skip
+# Otherwise, look for dates where the price from yfinance matches the price in the Kaggle dataset
+# This test is: the Kaggle High value should represent the Max price of a given day/period, and the Low the min
+# allowing for some error (2%), return days in yfinance where the price is between the two
+# If this day is within 14 days of previous days recorded in the loop (using the common_elements function above) then keep both days in the list
+# This is a bit of an imperfect bootstrap method of working, but  ensures that within an error of < 2 weeks dates can be matched across stocks
+# The objective is to see if there is a common date on which the Kaggle data was pulled; this is not mentioned in the Kaggle dataset
 
 for index, row in df_adj.iterrows():
 
@@ -88,14 +98,20 @@ for index, row in df_adj.iterrows():
         
 print(initialdatelist)       
 print(olddatelist)
-print(breakerlist)    
 
+#In an earlier iteration of the code, the presence of a Stock without matching dates was meant to literally break the loop
+#This was revised - instead, stocks with no matching dates were logged and then the loop continues. These are then dropped.
+print(breakerlist)    
+#The print ensures these can be noted in the Appendix
 
 df_adj_valid = df_adj[~df_adj['Symbol'].isin(breakerlist)]
 
 print(df_adj_valid)
+
+#Renames columns - in particular, the 52_Week_Low and 52_Week_High were the wrong way around
 df_adj_valid=df_adj_valid.rename(columns={"52 Week Low":"52_Week_High", "52 Week High":"52_Week_Low", "Dividend Yield":"Dividend_Yield"})
 
+#SEC Filings was a simple link to the Financial Reports for the company, and was not needed
 df_adj_valid = df_adj_valid.drop('SEC Filings', axis=1)
 
 
