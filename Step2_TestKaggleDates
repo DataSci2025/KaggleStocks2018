@@ -114,7 +114,7 @@ df_adj_valid=df_adj_valid.rename(columns={"52 Week Low":"52_Week_High", "52 Week
 #SEC Filings was a simple link to the Financial Reports for the company, and was not needed
 df_adj_valid = df_adj_valid.drop('SEC Filings', axis=1)
 
-
+#Saves with stocks with any field null dropped, and stocks where yfinance prices are incompatable with the detected Jan/Feb 2018 timescale dropped
 df_adj_valid.to_csv(r"D:\AnonUser\Documents\UniStocks\AdjustedStocksList.csv",index=False)
 
 
