@@ -33,7 +33,7 @@ print(df1.values.tolist())
 print(df1['Price/Book'])
 print(df1['Price/Earnings'])
 
-#Drop any columns with nulls
+#Drop any columns with nulls to ensure data integrity
 df_adj = df.dropna()
 
 print(df_adj)
@@ -116,3 +116,9 @@ df_adj_valid = df_adj_valid.drop('SEC Filings', axis=1)
 
 
 df_adj_valid.to_csv(r"D:\AnonUser\Documents\UniStocks\AdjustedStocksList.csv",index=False)
+
+
+
+
+#Dates output = ['2018-02-16', '2018-02-06', '2018-02-07', '2018-02-08', '2018-02-09', '2018-02-12', '2018-02-14', '2018-02-05', '2018-02-13', '2018-02-15', '2018-02-20', '2018-02-21', '2018-02-22', '2018-02-23', '2018-02-26', '2018-01-29', '2018-01-16', '2018-01-03', '2018-01-04', '2018-01-05', '2017-12-21', '2017-12-22', '2017-12-26', '2017-12-27', '2017-12-28', '2017-12-29', '2018-01-02', '2018-01-08', '2018-01-09', '2018-01-30', '2018-01-31', '2018-02-01', '2018-02-02']
+#This indicates a likely January/February 2018 date
