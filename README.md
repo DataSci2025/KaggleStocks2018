@@ -41,15 +41,25 @@ This appears to firmly reject the ‘Value’ hypothesis for this dataset and su
 ## References
 
 Asness, C.S. et al., 2013. Value and Momentum Everywhere. The Journal of Finance, 68(3), pp. 929-985.
+
 Carhart, M.M., 1997. On Persistence in Mutual Fund Performance. The Journal of Finance, 52(1), pp. 57-82.
+
 Fama, E.F. and French, K.R., 1992. The Cross-Section of Expected Stock Returns. The Journal of Finance, 47, pp. 427-465. 
+
 Gray, W., 2018. Factor Investing Fact Check: Are Value and Momentum Dead? [online] Available at: https://alphaarchitect.com/factor-investing-fact-check-are-value-and-momentum-dead/ [Accessed 31 August 2025].
+
 He, W. & Wei, P.P., 2003. Is overreaction an explanation for the value effect? A study using implied volatility from option prices. Department of Economics and Finance Working Papers, 1991-2006, Paper 8.
+
 Hou, K., Mo, H., Xue, C. & Zhang, L., 2017. The Economics of Value Investing. NBER Working Paper No. w23563. 
+
 Lakonishok, J., Shleifer, A. and Vishny, R.W., 1994. Contrarian Investment, Extrapolation, and Risk. The Journal of Finance, 49, pp. 1541-1578.
+
 Lehmann, B., 1990. Fads, martingales and market efficiency. Quarterly Journal of Economics, 105, pp. 1-28.
+
 Li, H. & Fang, Z. & Zhao, D., 2007. GBP/USD Currency Exchange Rate Time Series Forecasting Using Regularized Least-Squares Regression Method. Lecture Notes in Engineering and Computer Science, 2166.
+
 Navas, R. & Bentes, S., 2023. Value investing: a new SCORE model. Review of Business Management, 25, pp. 166-185. DOI: 10.7819/rbgn.v25i2.4224.
+
 PaytonFisher, 2018. S&P 500 Companies with Financial Information [online] Available at: https://www.kaggle.com/datasets/paytonfisher/sp-500-companies-with-financial-information/data [Accessed 01 August 2025].
 Piotroski, J.D., 2000. Value Investing: The Use of Historical Financial Statement Information to Separate Winners from Losers. Journal of Accounting Research, 38, pp. 1–41. JSTOR, Available at: https://doi.org/10.2307/2672906 [Accessed 3 Sept. 2025].
 Roll, R., 1988. R². The Journal of Finance, 43(3), pp. 541-566.
