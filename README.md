@@ -61,10 +61,16 @@ Li, H. & Fang, Z. & Zhao, D., 2007. GBP/USD Currency Exchange Rate Time Series F
 Navas, R. & Bentes, S., 2023. Value investing: a new SCORE model. Review of Business Management, 25, pp. 166-185. DOI: 10.7819/rbgn.v25i2.4224.
 
 PaytonFisher, 2018. S&P 500 Companies with Financial Information [online] Available at: https://www.kaggle.com/datasets/paytonfisher/sp-500-companies-with-financial-information/data [Accessed 01 August 2025].
+
 Piotroski, J.D., 2000. Value Investing: The Use of Historical Financial Statement Information to Separate Winners from Losers. Journal of Accounting Research, 38, pp. 1–41. JSTOR, Available at: https://doi.org/10.2307/2672906 [Accessed 3 Sept. 2025].
+
 Roll, R., 1988. R². The Journal of Finance, 43(3), pp. 541-566.
+
 Six, L., 2021. Value Investing with Big Data. [online] Available at: https://lionsix.ch/home/static/media/paper.ca88398a.pdf [Accessed 10 July 2025].
+
 Tramer, M et al., 2020. Multiple Linear Regression (2nd Edition). Cathie Marsh Institute Working Paper, 2020-01.
+
 Woo, K.-Y., Mai, C., McAleer, M. & Wong, W.-K., 2020. Review on Efficiency and Anomalies in Stock Markets. Economies, 8(1). DOI: https://doi.org/10.3390/economies8010020.
+
 Ying, Q., Yousaf, T., Ain, Q. u., Akhtar, Y. & Rasheed, M.S., 2019. Stock Investment and Excess Returns: A Critical Review in the Light of the Efficient Market Hypothesis. Journal of Risk and Financial Management, 12(2). DOI: https://doi.org/10.3390/jrfm12020097.
 
