@@ -1,6 +1,4 @@
 # Kaggle 2018 S&P 500 Stock Market Analysis
-Utilises paytonfisher's S&P 500 Companies with Financial Information (2021) Kaggle dataset https://www.kaggle.com/datasets/paytonfisher/sp-500-companies-with-financial-information/data
-# Kaggle 2018 S&P 500 Stock Market Analysis
 
 ## Executive Summary
 This project utilises public data to explain stock returns. A Kaggle snapshot of S&P 500 data with a limited number of financial ratios from 2018 was employed alongside *yfinance* price data. OLS regressions predicted 5 snapshots of annual price returns. Overall results were weak, although positive correlations appeared with **Price/Sales**. For Year 1, negative correlations were also shown with **momentum**, an unusual combination worthy of further investigation.
@@ -26,6 +24,9 @@ Next, prices were pulled for each Jan/Feb of the following 5 years and joined wi
 
 
 ### Step 4 - Regression
+
+![Combined Data Pairplot](/PairPlot_A.png)
+
 OLS Regression was chosen to analyse the cross-sectional data; time series, an alternative, is more suited to price data on assets without detailed ratio information, such as Li’s (2007) Foreign Exchange analysis. The null Hypothesis is that there is no relationship between fundamentals and the annual price returns. This hypothesis is considered broken by statistically likely (p < 0.05) relationships. In finance, R², used for train and test sets, remains valuable at low levels. Academically, most stock movement ‘noise’ is random, and each firm has idiosyncratic performance (Piotroski, 2000). Adjusted R-squared, even for the usually strong beta relationship, is often 0.1-0.2 and rarely exceeds 0.4 (Roll, 1988).   
 As loss-making (negative PE) or severely distressed (negative PB) companies might perform erratically, these are dropped. By multiplying dividend yield by the 2018 Price, stocks’ annual dividend was estimated and appended to the price for each year. This assumes dividends don’t not change – unlikely for all stocks – but this is the best approximation given data limitations. Prices are converted into 5 years of Gain/Loss (GL) to enable standard comparisons. This is winsorised by 1%, removing outliers, following similar practice by Fama and French (1992). 52_Week_Trend was calculated to enable comparisons, assigning a decimal for the 2018 price relative to its 52-Week Low (0) and 52-Week High (1). This proxies momentum before the snapshot.
 
